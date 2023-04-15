@@ -5,23 +5,24 @@
 void
 filter(int lpipe[])
 {
-  int rpipe[2];
-  pipe(rpipe);
+  int rpipe[2]; //file descriptors for pipe
+  pipe(rpipe); //cria o pipe
 
-  int primes[50];
-  int cnt = 0;
-  char buf[1];
+  int primes[50]; vetor para armazenamento dos números encontrados
+  int c = 0; contador
+  char buf[1]; 
 
-  while ((read(lpipe[0], buf, sizeof(buf))) != 0) {
-    primes[cnt++] = buf[0];
+  while ((read(lpipe[0], buf, sizeof(buf))) != 0) { // leitura do pipe
+    primes[c++] = buf[0]; // armazena e incrementa o número lido
   }
   close(lpipe[0]);
 
-  if (cnt == 0) return;
-  int first = primes[0];
+  if (c == 0) return;
+
+  int first = primes[0]; // armazena o primeiro primo encontrado
   printf("prime %d\n", first);
 
-  for (int i = 1; i < cnt; i++) {
+  for (int i = 1; i < c; i++) {
     if (primes[i] % first != 0) {
       char p = primes[i];
       write(rpipe[1], &p, 1);

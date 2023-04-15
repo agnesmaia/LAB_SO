@@ -1,83 +1,65 @@
-#include "kernel/types.h"
-#include "user/user.h"
-#include "kernel/fcntl.h"
-#include "kernel/param.h"
-
-#define MAX_ARG_LEN 512
-
-void copy_argv(char **ori_argv, int ori_argc, char *new_argv, char **argv) {
-  
-  int k = 0;
-  for (int i = 0; i < ori_argc; i++) {
-    argv[k] = malloc(strlen(ori_argv[i]) + 1);
-    memcpy(argv[k++], ori_argv[i], strlen(ori_argv[i]) + 1);
-  }
-
-  argv[k] = malloc(strlen(new_argv) + 1);
-  memcpy(argv[k++], new_argv, strlen(new_argv) + 1);
-}
-
-void print(char **s, int n) {
-  
-  for (int i = 0; i < n; i++) {
-    printf("%s\n", s[i]);
-  }
-}
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 int main(int argc, char *argv[]) {
-  if (argc <= 1) {
-    fprintf(2, "Usage: xargx command [arg ...]\n");
+  if (argc < 2) {
+    fprintf(stderr, "Usage: xargx command [arg ...]\n");
     exit(1);
   }
 
-  char param[MAX_ARG_LEN];
+  const int maxArgumentLenght = 512; // tamanho máximo de cada argumento
+  char buf[maxArgumentLenght]; // criação do buffer
+  char *cmd_argv[argc + 1]; // armazena os argumentos e o nome do comando
+
+  //
+  for (int i = 1; i < argc; i++) {
+    cmd_argv[i - 1] = argv[i];
+  }
+  cmd_argv[argc - 1] = buf;
+  cmd_argv[argc] = NULL;
+
+  //variáveis para leitura dos argumentos do terminal
   int i = 0;
-  char ch;
   int ignore = 0;
-  while (read(0, &ch, 1) > 0) {
-    if (ch == '\n') {
+  int ch;
+
+  //leitura dos caracteres até o fim do arquivo
+  while ((ch = getchar()) != EOF) {
+    if (ch == '\n') { // se for uma quebra de linha, termina a leitura do argumento atual
       if (ignore) {
+        //
         i = 0;
         ignore = 0;
         continue;
       }
-      param[i] = 0;
+      buf[i] = '\0'; // adiciona o '\0' no final do buffer
       i = 0;
 
-      int pid = fork();
+      pid_t pid = fork(); // novo processo com os argumentos passados
+
       if (pid == 0) {
         //child
-        int cmd_argc = argc;
-        
-        char *cmd_argv[MAXARG];
-
-        copy_argv(argv + 1, argc - 1, param, cmd_argv);
-        cmd_argv[cmd_argc] = 0;
-        
-        exec(cmd_argv[0], cmd_argv);
-
-        exit(0);
-      } 
-      
-      else {
-        wait((int *)0);
+        execvp(cmd_argv[0], cmd_argv);
+        perror("execvp");
+        exit(1);
+      } else if (pid == -1) {
+        perror("fork");
+        exit(1);
+      } else {
+        //parent
+        wait(NULL);
       }
-      
-    } 
-    
-    else {
-      
-      if (!ignore && i >= MAX_ARG_LEN - 1) {
-        printf("xargs: too long arguments...\n");
+    } else {
+      if (!ignore && i >= maxArgumentLenght - 1) {
+        fprintf(stderr, "xargs: argument too long\n");
         ignore = 1;
       }
-
       if (!ignore) {
-        param[i++] = ch;
+        buf[i++] = ch;
       }
     }
   }
-
   exit(0);
 }
