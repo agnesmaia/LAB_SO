@@ -3,13 +3,7 @@
 #include "user/user.h"
 #include "kernel/fs.h"
 
-// int
-// match(char *filename, char *name) {
-//   return strcmp(filename, name) == 0;
-// }
 
-// '.' Matches any single character.​​​​
-// '*' Matches zero or more of the preceding element.
 int match(char* s, char* p) {
   if (!*p) return !*s;
   if (*(p + 1) != '*') 
