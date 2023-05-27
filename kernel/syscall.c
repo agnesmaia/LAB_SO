@@ -126,7 +126,9 @@ static uint64 (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
+[SYS_trace]   sys_trace,
 };
+
 
 void
 syscall(void)
@@ -135,6 +137,11 @@ syscall(void)
   struct proc *p = myproc();
 
   num = p->trapframe->a7;
+
+  if (myproc()->trace_mask & (1 << num)) {
+    printf("%d: syscall %s\n", myproc()->pid, syscalls[num]);
+  }
+
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     // Use num to lookup the system call function for num, call it,
     // and store its return value in p->trapframe->a0

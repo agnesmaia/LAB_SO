@@ -319,6 +319,9 @@ fork(void)
   release(&wait_lock);
 
   acquire(&np->lock);
+
+  np->trace_mask = myproc()->trace_mask;
+
   np->state = RUNNABLE;
   release(&np->lock);
 

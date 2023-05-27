@@ -194,6 +194,7 @@ UPROGS=\
 	$U/_primes\
 	$U/_find\
 	$U/_xargs\
+	$U/_trace\
 
 ifeq ($(LAB),$(filter $(LAB), lock))
 UPROGS += \
