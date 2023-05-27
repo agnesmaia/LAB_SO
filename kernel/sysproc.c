@@ -98,7 +98,9 @@ sys_trace(void)
   if (argint(0, &mask) < 0)
     return -1;
 
-  myproc()->trace_mask = mask;
+  struct proc *pro = myproc();
+  printf("trace pid: %d\n", pro->pid);
+  pro->trace_mask = mask;
 
   return 0;
 }
